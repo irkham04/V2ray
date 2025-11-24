@@ -12,7 +12,7 @@ API_HASH = os.environ["TELEGRAM_API_HASH"]
 
 CHANNEL_USERNAME = "foolvpn"
 KEYWORD = "Free Public Proxy"
-FORCED_SERVER = "quiz.vidio.com"  # paksa semua server
+FORCED_SERVER = "104.18.1.196"  # paksa semua server
 
 def url_encode_remark(s):
     return urllib.parse.quote(s)
