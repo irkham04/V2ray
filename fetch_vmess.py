@@ -34,6 +34,7 @@ async def main():
         if not (m.message and KEYWORD.lower() in m.message.lower()):
             continue
 
+        # parse message fields
         info = {}
         for line in m.message.splitlines():
             line = line.strip()
@@ -46,6 +47,11 @@ async def main():
         country = info.get("country", "")
         org = info.get("org", "")
         mode = info.get("mode", "")
+
+        # =========== FILTER SG ONLY =============
+        if country.upper() != "SG":
+            continue
+        # ========================================
 
         # ---------------- VMESS ----------------
         if vpn_type == "vmess" and len(vmess_links) < target_per_type:
@@ -128,117 +134,6 @@ async def main():
     print("Collected links:")
     for i, l in enumerate(all_links, 1):
         print(f"{i}. {l}")
-
-    # ===================================================================
-    #                     === CLASH OUTPUT START ===
-    # ===================================================================
-    clash_nodes = []
-
-    # VMESS
-    for l in vmess_links:
-        data = json.loads(base64.b64decode(l.replace("vmess://", "")).decode())
-        clash_nodes.append({
-            "name": data["ps"],
-            "type": "vmess",
-            "server": data["add"],
-            "port": int(data["port"]),
-            "uuid": data["id"],
-            "alterId": int(data.get("aid", 0)),
-            "cipher": "auto",
-            "network": "ws",
-            "ws-opts": {
-                "path": data.get("path", "/"),
-                "headers": {"Host": data.get("host", "")}
-            },
-            "tls": (data.get("tls") == "tls")
-        })
-
-    # VLESS
-    for l in vless_links:
-        raw = l.replace("vless://", "")
-        node, params = raw.split("@")[0], raw.split("@")[1]
-        uuid_val = node
-        server = params.split(":")[0]
-        port = params.split(":")[1].split("?")[0]
-        query = params.split("?")[1].split("#")[0]
-        remark = urllib.parse.unquote(params.split("#")[-1])
-        q = dict(p.split("=", 1) for p in query.split("&") if "=" in p)
-
-        clash_nodes.append({
-            "name": remark,
-            "type": "vless",
-            "server": server,
-            "port": int(port),
-            "uuid": uuid_val,
-            "network": "ws",
-            "tls": ("security" in q and q["security"] == "tls"),
-            "ws-opts": {
-                "path": q.get("path", "/"),
-                "headers": {"Host": q.get("host", "")}
-            },
-            "client-fingerprint": "chrome"
-        })
-
-    # TROJAN
-    for l in trojan_links:
-        raw = l.replace("trojan://", "")
-        password = raw.split("@")[0]
-        server = raw.split("@")[1].split(":")[0]
-        port = raw.split(":")[2].split("?")[0]
-        query = raw.split("?")[1].split("#")[0]
-        remark = urllib.parse.unquote(raw.split("#")[-1])
-        q = dict(p.split("=", 1) for p in query.split("&") if "=" in p)
-
-        clash_nodes.append({
-            "name": remark,
-            "type": "trojan",
-            "server": server,
-            "port": int(port),
-            "password": password,
-            "network": "ws",
-            "tls": ("security" in q and q["security"] == "tls"),
-            "ws-opts": {
-                "path": q.get("path", "/"),
-                "headers": {"Host": q.get("sni", "")}
-            }
-        })
-
-    clash_yaml = {
-        "port": 7890,
-        "socks-port": 7891,
-        "redir-port": 7892,
-        "allow-lan": True,
-        "mode": "rule",
-        "log-level": "info",
-        "proxies": clash_nodes,
-        "proxy-groups": [
-            {
-                "name": "AUTO",
-                "type": "url-test",
-                "proxies": [n["name"] for n in clash_nodes],
-                "url": "http://www.gstatic.com/generate_204",
-                "interval": 300
-            },
-            {
-                "name": "SELECT",
-                "type": "select",
-                "proxies": [n["name"] for n in clash_nodes]
-            }
-        ],
-        "rules": [
-            "MATCH,SELECT"
-        ]
-    }
-
-    pathlib.Path("results/clash.yaml").write_text(
-        json.dumps(clash_yaml, indent=2, ensure_ascii=False)
-    )
-
-    print("Generated: results/clash.yaml")
-
-    # ===================================================================
-    #                     === CLASH OUTPUT END ===
-    # ===================================================================
 
     await client.disconnect()
 
