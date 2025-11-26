@@ -3,9 +3,9 @@ from telethon import TelegramClient
 
 SESSION_FILE = "tg_session.session"
 
-if "TG_SESSION_B64_NEW" in os.environ:
+if "TG_SESSION_B64" in os.environ:
     with open(SESSION_FILE, "wb") as f:
-        f.write(base64.b64decode(os.environ["TG_SESSION_B64_NEW"]))
+        f.write(base64.b64decode(os.environ["TG_SESSION_B64"]))
 
 API_ID = int(os.environ["TELEGRAM_API_ID"])
 API_HASH = os.environ["TELEGRAM_API_HASH"]
