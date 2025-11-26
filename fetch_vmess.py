@@ -3,7 +3,7 @@ from telethon import TelegramClient
 
 SESSION_FILE = "tg_session.session"
 
-if "TG_SESSION_B64" in os.environ:
+if "TG_SESSION_B64_NEW" in os.environ:
     with open(SESSION_FILE, "wb") as f:
         f.write(base64.b64decode(os.environ["TG_SESSION_B64_NEW"]))
 
