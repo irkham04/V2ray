@@ -1,37 +1,37 @@
 name: Fetch VMESS from Telegram
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 */3 * * *'  # Jalankan setiap 3 jam
+workflow_dispatch:
+schedule:
+- cron: '0 */3 * * *'  # Jalankan setiap 3 jam
 
 jobs:
-  fetch-vmess:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: true
+fetch-vmess:
+runs-on: ubuntu-latest
+steps:
+- uses: actions/checkout@v4
+with:
+persist-credentials: true
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
+  - uses: actions/setup-python@v5
+    with:
+      python-version: '3.x'
 
-      - run: pip install --upgrade telethon
+  - run: pip install --upgrade telethon
 
-      - name: Run fetch_vmess.py
-        env:
-          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
-          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
-          TG_SESSION_B64: ${{ secrets.TG_SESSION_B64 }}
-        run: python fetch_vmess.py
+  - name: Run fetch_vmess.py
+    env:
+      TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+      TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+      TG_SESSION_B64_NEW: ${{ secrets.TG_SESSION_B64_NEW }}  # gunakan Secret baru
+    run: python fetch_vmess.py
 
-      - name: Commit & Push Results
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add results/
-          git commit -m "Update VMESS results [skip ci]" || echo "No changes to commit"
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:main
+  - name: Commit & Push Results
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    run: |
+      git config user.name "github-actions[bot]"
+      git config user.email "github-actions[bot]@users.noreply.github.com"
+      git add results/
+      git commit -m "Update VMESS results [skip ci]" || echo "No changes to commit"
+      git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:main
