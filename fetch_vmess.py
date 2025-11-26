@@ -48,11 +48,6 @@ async def main():
         org = info.get("org", "")
         mode = info.get("mode", "")
 
-        # =========== FILTER SG ONLY =============
-        if country.upper() != "SG":
-            continue
-        # ========================================
-
         # ---------------- VMESS ----------------
         if vpn_type == "vmess" and len(vmess_links) < target_per_type:
             id_uuid = info.get("uuid") or str(uuid.uuid4())
@@ -62,12 +57,13 @@ async def main():
             tls_field = "tls" if tls_flag in ("1", "true", "yes") else ""
             host_hdr = info.get("host") or info.get("sni") or FORCED_SERVER
             path = ensure_slash(info.get("path", ""))
+            # build ps same style as remark
             ps_remark = f"{id_field} {country} {org} WS {mode} TLS".strip()
             ps_val = ps_remark if ps_remark.strip() else f"vmess-{id_uuid[:6]}"
             vmess_obj = {
                 "v": "2",
                 "ps": ps_val,
-                "add": FORCED_SERVER,
+                "add": FORCED_SERVER,         # forced server
                 "port": port,
                 "id": id_uuid,
                 "aid": aid_val,
@@ -122,11 +118,13 @@ async def main():
             remark = f"{id_field} {country} {org} WS {mode} TLS"
             trojan_links.append(f"trojan://{password}@{FORCED_SERVER}:{port}?{param_str}#{url_encode_remark(remark)}")
 
+        # stop early if all collected
         if len(vmess_links) >= target_per_type and len(vless_links) >= target_per_type and len(trojan_links) >= target_per_type:
             break
 
     all_links = vmess_links + vless_links + trojan_links
 
+    # save & print
     pathlib.Path("results").mkdir(exist_ok=True)
     pathlib.Path("results/last_links.txt").write_text("\n".join(all_links))
     pathlib.Path("results/last_links.json").write_text(json.dumps(all_links, indent=2, ensure_ascii=False))
